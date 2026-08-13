@@ -1,0 +1,12 @@
+fastapi
+langchain
+requests
+pydantic   
+huggingface_hub
+faiss-cpu
+pinecone-client
+tqdm
+pymupdf
+python-dotenv
+loguru
+uvicorn
