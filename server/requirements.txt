@@ -10,3 +10,4 @@ pymupdf
 python-dotenv
 loguru
 uvicorn
+sentence-transformers
