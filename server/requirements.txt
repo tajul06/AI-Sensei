@@ -1,13 +1,38 @@
+#web frameworks
+
+
 fastapi
-langchain
-requests
-pydantic   
-huggingface_hub
-faiss-cpu
-pinecone-client
-tqdm
-pymupdf
-python-dotenv
-loguru
 uvicorn
+python-multipart
+
+#langchain Ecosystem
+
+langchain
+langchain-community
+langchain-core
+langchain-groq
+
+#vector database
+pinecone
+faiss-cpu
+
+#embeddings
 sentence-transformers
+langchain-huggingface
+huggingface-hub
+
+#pdf processing
+PyMuPDF
+
+#environment variables
+python-dotenv
+
+#typing &utilities
+pydantic
+requests
+tqdm
+
+#logging
+loguru
+
+

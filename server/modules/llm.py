@@ -1,12 +1,13 @@
-from langchain.prompts import PromptTemplate
-from langchain.chains import RetrievalQA
+from langchain_core.prompts import PromptTemplate
+from langchain_classic.chains import RetrievalQA
 from langchain_openrouter import ChatOpenRouter
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 openrouter_api_key = os.environ.get("OPENROUTER_API_KEY")
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 
 def get_llm_chain(retriever):
     llm = ChatOpenRouter(
