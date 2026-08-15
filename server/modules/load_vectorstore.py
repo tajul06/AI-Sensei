@@ -12,14 +12,15 @@ from langchain_huggingface import HuggingFaceEndpointEmbeddings
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
-PINECONE_ENV = "us-east1"
+PINECONE_ENV = "us-east-1"  # Replace with your Pinecone environment
 PINECONE_INDEX_NAME = "ai-sensei"
+
 
 UPLOAD_DIR = "./uploaded_docs"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-
+HF_TOKEN = os.environ["HF_TOKEN"]
 #initialize pinecone instance
 pc = Pinecone(api_key=PINECONE_API_KEY)
 spec = ServerlessSpec(cloud="aws", region = PINECONE_ENV)
@@ -42,15 +43,21 @@ index = pc.Index(PINECONE_INDEX_NAME)
 def load_and_embed_documents(uploaded_files):
 
     embed_model = HuggingFaceEndpointEmbeddings(
-        model="sentence-transformers/all-MiniLM-L6-v2",
-
-        
-    )
+    model="sentence-transformers/all-MiniLM-L6-v2",
+    task="feature-extraction",
+    huggingfacehub_api_token=os.environ.get("HF_TOKEN"),
+)
 
     file_paths = []
 
     #1. Save uploaded files to the UPLOAD_DIR
     for file in uploaded_files:
+        print("DEBUG filename:", repr(file.filename), "content_type:", file.content_type)
+        if not file.filename:
+            raise ValueError(
+                f"Received a file with no filename. content_type={file.content_type}. "
+                "Check that Postman's form-data key is set to type 'File', not 'Text'."
+            )
         save_path = Path(UPLOAD_DIR) / file.filename
         with open(save_path, "wb") as f:
             f.write(file.file.read())
@@ -61,14 +68,18 @@ def load_and_embed_documents(uploaded_files):
         loader = PyPDFLoader(file_path)
         documents = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        chunks =text_splitter.split_documents(documents)
+        chunks = text_splitter.split_documents(documents)
 
-        texts =[chunk.page_content for chunk in chunks]
-        metadata =[chunk.metadata for chunk in chunks]
-        ids=[f"{Path(file_path).stem}_{i}" for i in range(len(chunks))]
+        texts = [chunk.page_content for chunk in chunks]
+        metadata = []
+        for chunk in chunks:
+            chunk_metadata = dict(chunk.metadata)
+            chunk_metadata["text"] = chunk.page_content
+            metadata.append(chunk_metadata)
+        ids = [f"{Path(file_path).stem}_{i}" for i in range(len(chunks))]
 
         print(f"Embedding and uploading {len(texts)} chunks from {file_path} to Pinecone...")
-        embeddings =embed_model.embed_documents(texts)
+        embeddings = embed_model.embed_documents(texts)
 #upsert embeddings to pinecone in batches of 100
         print("Uploading embeddings to Pinecone..."
               )
@@ -77,7 +88,7 @@ def load_and_embed_documents(uploaded_files):
                 batch_embeddings = embeddings[i:i + 100]
                 batch_ids = ids[i:i + 100]
                 batch_metadata = metadata[i:i + 100]
-                index.upsert(vectors=zip(batch_ids, batch_embeddings, batch_metadata))
+                index.upsert(vectors=list(zip(batch_ids, batch_embeddings, batch_metadata)))
                 progress_bar.update(len(batch_embeddings))
 
         print(f"Finished uploading embeddings for {file_path} to Pinecone.")
