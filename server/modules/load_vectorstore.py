@@ -22,25 +22,34 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 HF_TOKEN = os.environ["HF_TOKEN"]
 #initialize pinecone instance
-pc = Pinecone(api_key=PINECONE_API_KEY)
-spec = ServerlessSpec(cloud="aws", region = PINECONE_ENV)
-existing_indexes = [i["name"] for i in pc.list_indexes()]
+_pc = None
+_index = None
 
-if PINECONE_INDEX_NAME not in existing_indexes:
-    pc.create_index(
-        name=PINECONE_INDEX_NAME,
-        dimension=384,
-        metric="cosine",
-        spec=spec
-    )       
-    while not pc.describe_index(PINECONE_INDEX_NAME).status["ready"]:
-       
-        time.sleep(5)
+def get_pinecone_index():
+    global _pc, _index
+    if _index is not None:
+        return _index
 
-index = pc.Index(PINECONE_INDEX_NAME)
+    _pc = Pinecone(api_key=PINECONE_API_KEY)
+    spec = ServerlessSpec(cloud="aws", region=PINECONE_ENV)
+    existing_indexes = [i["name"] for i in _pc.list_indexes()]
+
+    if PINECONE_INDEX_NAME not in existing_indexes:
+        _pc.create_index(
+            name=PINECONE_INDEX_NAME,
+            dimension=384,
+            metric="cosine",
+            spec=spec
+        )
+        while not _pc.describe_index(PINECONE_INDEX_NAME).status["ready"]:
+            time.sleep(5)
+
+    _index = _pc.Index(PINECONE_INDEX_NAME)
+    return _index
 
 #load ,split and embed documents
 def load_and_embed_documents(uploaded_files):
+    index = get_pinecone_index()
 
     embed_model = HuggingFaceEndpointEmbeddings(
     model="sentence-transformers/all-MiniLM-L6-v2",
@@ -88,6 +97,7 @@ def load_and_embed_documents(uploaded_files):
                 batch_embeddings = embeddings[i:i + 100]
                 batch_ids = ids[i:i + 100]
                 batch_metadata = metadata[i:i + 100]
+                
                 index.upsert(vectors=list(zip(batch_ids, batch_embeddings, batch_metadata)))
                 progress_bar.update(len(batch_embeddings))
 
