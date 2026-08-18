@@ -6,3 +6,4 @@ __pycache__/
 **/__pycache__/
 *.py[cod]
 server/uploaded_docs/
+client/__pycache__/
