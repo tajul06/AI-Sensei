@@ -11,6 +11,7 @@ langchain
 langchain-community
 langchain-core
 langchain-groq
+langchain-google-genai
 
 #vector database
 pinecone
@@ -20,6 +21,7 @@ faiss-cpu
 sentence-transformers
 langchain-huggingface
 huggingface-hub
+
 
 #pdf processing
 PyMuPDF
