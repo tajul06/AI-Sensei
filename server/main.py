@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from middlewares.exception_handlers import catch_exceptions_middleware
-from routes.upload_pdf import router as upload_pdf_router
-from routes.user_qs import router as user_qs_router
+from api.upload_pdf import router as upload_pdf_router
+from api.user_qs import router as user_qs_router
 
 
 

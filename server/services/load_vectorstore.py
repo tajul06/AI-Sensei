@@ -1,26 +1,27 @@
-import os
+
 import time
 from pathlib import Path
-from dotenv import load_dotenv
+
+
 from tqdm.auto import tqdm 
 from pinecone import Pinecone, ServerlessSpec
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
+from config.settings import PINECONE_API_KEY, PINECONE_INDEX_NAME, HF_TOKEN
+from config.models import HF_EMBEDDING_MODEL, EMBEDDING_DIMENSION
+from config.subjects import group_for_subject
+from config.chunking import get_splitter 
 
-load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 
-PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
-PINECONE_ENV = "us-east-1"  # Replace with your Pinecone environment
-PINECONE_INDEX_NAME = "ai-sensei"
+PINECONE_ENV = "us-east-1"  
 
 
 UPLOAD_DIR = "./uploaded_docs"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+Path(UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
 
-HF_TOKEN = os.environ["HF_TOKEN"]
+
 #initialize pinecone instance
 _pc = None
 _index = None
@@ -37,7 +38,7 @@ def get_pinecone_index():
     if PINECONE_INDEX_NAME not in existing_indexes:
         _pc.create_index(
             name=PINECONE_INDEX_NAME,
-            dimension=384,
+            dimension=EMBEDDING_DIMENSION,
             metric="cosine",
             spec=spec
         )
@@ -48,15 +49,16 @@ def get_pinecone_index():
     return _index
 
 #load ,split and embed documents
-def load_and_embed_documents(uploaded_files):
+def load_and_embed_documents(uploaded_files ,subject:str):
+    group = group_for_subject(subject)
     index = get_pinecone_index()
 
     embed_model = HuggingFaceEndpointEmbeddings(
-    model="sentence-transformers/all-MiniLM-L6-v2",
+    model=HF_EMBEDDING_MODEL,
     task="feature-extraction",
-    huggingfacehub_api_token=os.environ.get("HF_TOKEN"),
+    huggingfacehub_api_token=HF_TOKEN,
 )
-
+    text_splitter = get_splitter(group)
     file_paths = []
 
     #1. Save uploaded files to the UPLOAD_DIR
@@ -76,7 +78,6 @@ def load_and_embed_documents(uploaded_files):
     for file_path in file_paths:
         loader = PyPDFLoader(file_path)
         documents = loader.load()
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         chunks = text_splitter.split_documents(documents)
 
         texts = [chunk.page_content for chunk in chunks]
@@ -84,6 +85,8 @@ def load_and_embed_documents(uploaded_files):
         for chunk in chunks:
             chunk_metadata = dict(chunk.metadata)
             chunk_metadata["text"] = chunk.page_content
+            chunk_metadata["subject"] = subject
+            chunk_metadata["group"] = group
             metadata.append(chunk_metadata)
         ids = [f"{Path(file_path).stem}_{i}" for i in range(len(chunks))]
 

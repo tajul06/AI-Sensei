@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Form
 from fastapi.responses import JSONResponse
-from modules.llm import get_llm_chain
-from modules.query_handlers import query_chain
+from services.llm import get_llm_chain
+from services.query_handlers import query_chain
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
@@ -10,26 +10,41 @@ from pydantic import Field
 from typing import List, Optional
 from logger import logger
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
-import os
+
+from config.settings import PINECONE_API_KEY, PINECONE_INDEX_NAME, HF_TOKEN
+from config.models import HF_EMBEDDING_MODEL
+from config.subjects import group_for_subject
+from config.retrieval import get_top_k_for_group
+
 
 router = APIRouter()
 
 
 @router.post("/ask/")
-async def ask_question(user_query: str = Form(...)):
+async def ask_question(
+    user_query: str = Form(...),
+    subject: str = Form(...),
+):
     try:
-        logger.info(f"Received user query: {user_query}")
+        group=group_for_subject(subject)  # Validate subject
+        logger.info(f"Received request to process user query for subject: {subject} : {user_query}")
+    
         # embeddding and pinecone setup
 
-        pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-        index = pc.Index(os.environ.get("PINECONE_INDEX_NAME", "ai-sensei"))
+        pc = Pinecone(api_key=PINECONE_API_KEY)
+        index = pc.Index(PINECONE_INDEX_NAME)
         embeddings = HuggingFaceEndpointEmbeddings(
-            model="sentence-transformers/all-MiniLM-L6-v2",
-            huggingfacehub_api_token=os.environ.get("HF_TOKEN"),
+            model=HF_EMBEDDING_MODEL,
+            huggingfacehub_api_token=HF_TOKEN,
         )
 
         embedded_query = embeddings.embed_query(user_query)
-        results = index.query(vector=embedded_query, top_k=5, include_metadata=True)
+        results = index.query(
+            vector=embedded_query, 
+            top_k=get_top_k_for_group(group), 
+            include_metadata=True ,
+            filter={"subject": subject}
+            )
 
         docs = []
         for match in results.get("matches", []):
@@ -50,7 +65,7 @@ async def ask_question(user_query: str = Form(...)):
                 return self.documents
 
         retriever = SimpleRetriever(documents=docs)
-        llm_chain = get_llm_chain(retriever)
+        llm_chain = get_llm_chain(subject, retriever)
         response = query_chain(llm_chain, user_query)
 
         logger.info("Successfully processed user query.")
@@ -65,6 +80,9 @@ async def ask_question(user_query: str = Form(...)):
     ],
 }
         return JSONResponse(content=serializable_response)
+    except ValueError as ve:
+        logger.warning(f"Invalid subject provided: {subject}. Error: {str(ve)}")
+        return JSONResponse(status_code=400, content={"message": str(ve)})
     except Exception as e:
         logger.exception(f"Error in ask_question: {str(e)}")
         return JSONResponse(
