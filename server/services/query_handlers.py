@@ -1,8 +1,8 @@
 from logger import logger
 
-def query_chain(chain, user_query):
+async def query_chain(chain, user_query):
     try:
-        result = chain({"query": user_query})
+        result = await  chain.ainvoke({"query": user_query})
         return result
     except Exception as e:
         # TEMP DEBUG — show the real error body from OpenRouter
