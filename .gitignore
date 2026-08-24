@@ -1,5 +1,6 @@
 .env
 server/.env
+frontend/.env
 # or: **/.env
 .venv/
 __pycache__/
@@ -7,3 +8,7 @@ __pycache__/
 *.py[cod]
 server/uploaded_docs/
 client/__pycache__/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
