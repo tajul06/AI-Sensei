@@ -19,12 +19,14 @@ from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from config.settings import PINECONE_API_KEY, PINECONE_INDEX_NAME, HF_TOKEN ,GOOGLE_API_KEY
 from config.models import HF_EMBEDDING_MODEL ,GEMINI_MODEL
 from config.subjects import group_for_subject
-from config.retrieval import get_top_k_for_group
+from config.retrieval import get_top_k_for_group , RERANK_ENABLED , RERANK_TOP_N ,BROAD_TOP_K
 from services.auth import get_current_user
 from services.query_handlers import query_chain
 from services.pinecone_client import query_pinecone_async
 from services.chat_history import get_recent_messages , save_message 
 from services.query_condense import condense_query
+from services.reranker import rerank_documents
+
 
 
 
@@ -60,7 +62,7 @@ async def ask_question(
         embedded_query = await embeddings.aembed_query(standalone_query)
         results = await query_pinecone_async(
             vector=embedded_query,
-            top_k=get_top_k_for_group(group),
+            top_k=BROAD_TOP_K,
             filter={"subject": subject, "user_id": user_id},
         )
         docs = []
@@ -70,6 +72,11 @@ async def ask_question(
             if not page_content:
                 continue
             docs.append(Document(page_content=page_content, metadata=metadata))
+
+        if RERANK_ENABLED:
+            docs = await rerank_documents(standalone_query, docs, top_n=RERANK_TOP_N)
+        else:
+            docs = docs[:get_top_k_for_group(group)]
 
         class SimpleRetriever(BaseRetriever):
             

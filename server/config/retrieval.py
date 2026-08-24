@@ -13,7 +13,8 @@ GROUP_TOP_K: dict[str,int] = {
 
 SIMILARITY_THRESHOLD = 0.75
 
-RERANK_ENABLED = False
+BROAD_TOP_K = 20
+RERANK_ENABLED = True
 RERANK_TOP_N = 3
 
 def get_top_k_for_group(group:str) -> int:

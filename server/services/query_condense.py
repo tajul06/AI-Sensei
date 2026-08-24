@@ -11,4 +11,11 @@ async def condense_query(user_query: str, history: list[dict], llm) -> str:
         f"Standalone question:"
     )
     response = await llm.ainvoke(prompt)
-    return response.content.strip()
+    content = response.content
+    # Newer langchain_google_genai versions return content as a list of blocks
+    if isinstance(content, list):
+        content = "".join(
+            block.get("text", "") if isinstance(block, dict) else str(block)
+            for block in content
+        )
+    return content.strip()
