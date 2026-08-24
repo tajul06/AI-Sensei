@@ -1,4 +1,4 @@
-import { Plus, Upload, LogOut, FileUp } from 'lucide-react'
+import { Plus, LogOut, FileUp } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { SUBJECT_COLORS, SUBJECT_ICONS } from '../lib/constants'
 import type { Subject } from '../lib/constants'
