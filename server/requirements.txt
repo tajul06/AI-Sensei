@@ -5,12 +5,15 @@ fastapi
 uvicorn
 python-multipart
 httpx
+pyjwt[crypto]
 #langchain Ecosystem
 
 langchain
+langchain-classic
 langchain-community
 langchain-core
 langchain-google-genai
+langchain-text-splitters
 
 #vector database
 pinecone
@@ -22,7 +25,7 @@ huggingface-hub
 
 
 #pdf processing
-PyPDF 
+pypdf
 
 #environment variables
 python-dotenv
@@ -34,5 +37,8 @@ tqdm
 
 #logging
 loguru
+
+#supabase
+supabase
 
 
