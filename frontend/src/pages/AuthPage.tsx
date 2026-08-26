@@ -75,14 +75,23 @@ export default function AuthPage() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">🎓</div>
-          <h1>AI Sensei</h1>
-          <p>Your personal AI study companion</p>
-        </div>
 
-        {/* Google OAuth — always visible */}
+      {/* Hero: logo + big serif headline + subtitle */}
+      <div className="auth-hero">
+        <div className="auth-hero-logo">
+          <div className="auth-hero-logo-icon">🎓</div>
+          <span className="auth-hero-logo-name">AI Sensei</span>
+        </div>
+        <h1>Study smarter,<br />not harder</h1>
+        <p className="auth-hero-sub">
+          Upload your textbooks and notes, then ask questions —
+          answers grounded in your own study material.
+        </p>
+      </div>
+
+      {/* Minimal auth card */}
+      <div className="auth-card">
+        {/* Google OAuth */}
         <button
           id="google-signin-btn"
           className="btn-google"
@@ -94,10 +103,7 @@ export default function AuthPage() {
           {googleLoading ? 'Redirecting…' : 'Continue with Google'}
         </button>
 
-        {/* Divider */}
-        <div className="auth-divider">
-          <span>or use email</span>
-        </div>
+        <div className="auth-divider"><span>or</span></div>
 
         <div className="auth-tabs">
           <button
@@ -116,8 +122,8 @@ export default function AuthPage() {
           </button>
         </div>
 
-        {error && <div className="auth-error" role="alert">{error}</div>}
-        {success && <div className="auth-success" role="status">{success}</div>}
+        {error && <div className="auth-error" role="alert" style={{ marginBottom: 12 }}>{error}</div>}
+        {success && <div className="auth-success" role="status" style={{ marginBottom: 12 }}>{success}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -159,6 +165,29 @@ export default function AuthPage() {
           </button>
         </form>
       </div>
+
+      {/* Feature bullets below card */}
+      <div className="auth-features-outer">
+        <ul>
+          <li>
+            <span className="feat-check">✓</span>
+            <span><strong>Subject-aware tutoring</strong> — Physics, Biology, History, and more</span>
+          </li>
+          <li>
+            <span className="feat-check">✓</span>
+            <span><strong>Upload your own PDFs</strong> — answers from your material, not the web</span>
+          </li>
+          <li>
+            <span className="feat-check">✓</span>
+            <span><strong>Follow-up questions remembered</strong> within each session</span>
+          </li>
+          <li>
+            <span className="feat-check">✓</span>
+            <span><strong>Private</strong> — your uploads are only visible to you</span>
+          </li>
+        </ul>
+      </div>
+
     </div>
   )
 }

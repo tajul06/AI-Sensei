@@ -2,6 +2,9 @@ import { useRef, useEffect } from 'react'
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import { ChevronDown, ChevronRight, BookOpen } from 'lucide-react'
 import { SUBJECT_ICONS } from '../lib/constants'
 import type { Subject } from '../lib/constants'
@@ -130,7 +133,7 @@ export default function ChatWindow({ messages, loading, subject, onSuggestion }:
           <div className="message-body">
             <div className="message-bubble">
               {msg.role === 'assistant' ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
                   {msg.content}
                 </ReactMarkdown>
               ) : (

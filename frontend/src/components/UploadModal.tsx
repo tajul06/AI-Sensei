@@ -3,6 +3,7 @@ import { X, Upload, FileText, Trash2 } from 'lucide-react'
 import { uploadPdfs } from '../lib/api'
 import { SUBJECTS } from '../lib/constants'
 import type { Subject } from '../lib/constants'
+import UploadedFilesList from './UploadedFilesList'
 
 interface Props {
   onClose: () => void
@@ -73,6 +74,7 @@ export default function UploadModal({ onClose, onSuccess, onError, defaultSubjec
 
         <div className="modal-body">
           <div className="form-group">
+
             <label htmlFor="upload-subject-select">Subject</label>
             <select
               id="upload-subject-select"
@@ -86,7 +88,7 @@ export default function UploadModal({ onClose, onSuccess, onError, defaultSubjec
               ))}
             </select>
           </div>
-
+          <UploadedFilesList subject={subject} />
           <div
             className={`drop-zone ${dragOver ? 'drag-over' : ''}`}
             onClick={() => inputRef.current?.click()}

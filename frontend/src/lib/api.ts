@@ -38,6 +38,12 @@ export interface ChatMessage {
   created_at?: string
 }
 
+export interface UploadedFile {
+  id: string
+  filename: string
+  uploaded_at: string
+}
+
 // ─── Endpoints ────────────────────────────────────────────────────────────────
 
 /** POST /ask/ — ask a question in a session */
@@ -55,7 +61,8 @@ export async function askQuestion(
   const res = await fetch(`${BASE_URL}/ask/`, { method: 'POST', headers, body })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.message ?? `Request failed: ${res.status}`)
+    const errorMsg = err.message || err.detail || err.error || `Request failed: ${res.status}`
+    throw new Error(errorMsg)
   }
   return res.json()
 }
@@ -72,6 +79,16 @@ export async function uploadPdfs(files: File[], subject: string): Promise<{ mess
     const err = await res.json().catch(() => ({}))
     throw new Error(err.message ?? `Upload failed: ${res.status}`)
   }
+  return res.json()
+}
+/** GET /uploaded_files/ — list all uploaded files for a subject */
+export async function listUploadedFiles(subject: string): Promise<{ files: UploadedFile[] }> {
+  const headers = await authHeaders()
+  const res = await fetch(`${BASE_URL}/uploaded_files/?subject=${encodeURIComponent(subject)}`, {
+    method: 'GET',
+    headers,
+  })
+  if (!res.ok) throw new Error(`Failed to list files: ${res.status}`)
   return res.json()
 }
 
