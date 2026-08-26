@@ -15,6 +15,7 @@ def get_llm_chain(subject:str , retriever) :
     llm=ChatGoogleGenerativeAI(
         model=GEMINI_MODEL,
         api_key=GOOGLE_API_KEY,
+        max_output_tokens=1024,
         
     )
     subject_prompt = get_prompt_for_subject(subject, group)
@@ -22,12 +23,12 @@ def get_llm_chain(subject:str , retriever) :
         input_variables=["context", "question"],
         template=subject_prompt + """
 
-        context:
+        Study Material:
         {context}
-        question:
+        Student's Question:
         {question}
         
-        Answer:
+        Your answer (as the tutor — don't mention "the context" or "the material" by name):
         """
     )
     return RetrievalQA.from_chain_type(

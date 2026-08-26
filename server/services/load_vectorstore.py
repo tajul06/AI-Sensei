@@ -11,7 +11,9 @@ from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from config.settings import PINECONE_API_KEY, PINECONE_INDEX_NAME, HF_TOKEN
 from config.models import HF_EMBEDDING_MODEL, EMBEDDING_DIMENSION
 from config.subjects import group_for_subject
-from config.chunking import get_splitter 
+from config.chunking import get_splitter
+from config.perser import load_with_pymupdf4llm
+from services.uploaded_files import record_uploaded_file
 
 
 PINECONE_ENV = "us-east-1"  
@@ -59,7 +61,8 @@ def load_and_embed_documents(uploaded_files ,subject:str ,user_id:str):
     huggingfacehub_api_token=HF_TOKEN,
 )
     text_splitter = get_splitter(group)
-    file_paths = []
+    # List of (save_path, original_filename) so inner loop can record each file correctly
+    file_entries: list[tuple[str, str]] = []
 
     #1. Save uploaded files to the UPLOAD_DIR
     for file in uploaded_files:
@@ -72,41 +75,47 @@ def load_and_embed_documents(uploaded_files ,subject:str ,user_id:str):
         save_path = Path(UPLOAD_DIR) / file.filename
         with open(save_path, "wb") as f:
             f.write(file.file.read())
-        file_paths.append(str(save_path))
+        file_entries.append((str(save_path), file.filename))
 
-#2. Load and split documents
-    for file_path in file_paths:
+    #2. Load, split, embed, and record each document
+    for file_path, filename in file_entries:
         try:
-         loader = PyPDFLoader(file_path)
-         documents = loader.load()
-         chunks = text_splitter.split_documents(documents)
+            if group in ("math", "stem"):
+                documents = load_with_pymupdf4llm(file_path)
+            else:
+                loader = PyPDFLoader(file_path)
+                documents = loader.load()
 
-         texts = [chunk.page_content for chunk in chunks]
-         metadata = []
-         for chunk in chunks:
-            chunk_metadata = dict(chunk.metadata)
-            chunk_metadata["text"] = chunk.page_content
-            chunk_metadata["subject"] = subject
-            chunk_metadata["group"] = group
-            chunk_metadata["user_id"] = user_id
-            metadata.append(chunk_metadata)
-         ids = [f"{user_id}_{Path(file_path).stem}_{i}" for i in range(len(chunks))]
+            chunks = text_splitter.split_documents(documents)
 
-         print(f"Embedding and uploading {len(texts)} chunks from {file_path} to Pinecone...")
-         embeddings = embed_model.embed_documents(texts)
-#upsert embeddings to pinecone in batches of 100
-         print("Uploading embeddings to Pinecone..."
-              )
-         with tqdm(total=len(embeddings), desc="Uploading embeddings") as progress_bar:
-            for i in range(0, len(embeddings), 100):
-                batch_embeddings = embeddings[i:i + 100]
-                batch_ids = ids[i:i + 100]
-                batch_metadata = metadata[i:i + 100]
-                
-                index.upsert(vectors=list(zip(batch_ids, batch_embeddings, batch_metadata)))
-                progress_bar.update(len(batch_embeddings))
+            texts = [chunk.page_content for chunk in chunks]
+            metadata = []
+            for chunk in chunks:
+                chunk_metadata = dict(chunk.metadata)
+                chunk_metadata["text"] = chunk.page_content
+                chunk_metadata["subject"] = subject
+                chunk_metadata["group"] = group
+                chunk_metadata["user_id"] = user_id
+                metadata.append(chunk_metadata)
+            ids = [f"{user_id}_{Path(file_path).stem}_{i}" for i in range(len(chunks))]
 
-         print(f"Finished uploading embeddings for {file_path} to Pinecone.")
+            print(f"Embedding and uploading {len(texts)} chunks from {file_path} to Pinecone...")
+            embeddings = embed_model.embed_documents(texts)
+
+            # Upsert embeddings to Pinecone in batches of 100
+            print("Uploading embeddings to Pinecone...")
+            with tqdm(total=len(embeddings), desc="Uploading embeddings") as progress_bar:
+                for i in range(0, len(embeddings), 100):
+                    batch_embeddings = embeddings[i:i + 100]
+                    batch_ids = ids[i:i + 100]
+                    batch_metadata = metadata[i:i + 100]
+
+                    index.upsert(vectors=list(zip(batch_ids, batch_embeddings, batch_metadata)))
+                    progress_bar.update(len(batch_embeddings))
+
+            print(f"Finished uploading embeddings for {file_path} to Pinecone.")
+            # Record this specific file — not the last loop variable
+            record_uploaded_file(user_id, subject, filename)
         finally:
-            # Clean up the uploaded file after processing   
+            # Clean up the uploaded file after processing
             Path(file_path).unlink(missing_ok=True)
