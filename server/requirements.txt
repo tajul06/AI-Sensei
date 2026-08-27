@@ -26,6 +26,7 @@ huggingface-hub
 
 #pdf processing
 pypdf
+pymupdf4llm
 
 #environment variables
 python-dotenv
