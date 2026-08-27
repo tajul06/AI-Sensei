@@ -50,8 +50,9 @@ export interface UploadedFile {
 export async function askQuestion(
   userQuery: string,
   subject: string,
-  sessionId: string
-): Promise<AskResponse> {
+  sessionId: string,
+  onChunk: (text: string) => void
+): Promise<void> {
   const headers = await authHeaders()
   const body = new FormData()
   body.append('user_query', userQuery)
@@ -64,7 +65,14 @@ export async function askQuestion(
     const errorMsg = err.message || err.detail || err.error || `Request failed: ${res.status}`
     throw new Error(errorMsg)
   }
-  return res.json()
+  if (!res.body) throw new Error("No response body")
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  while (true) {
+    const {done, value} = await reader.read()
+    if (done) break
+    onChunk(decoder.decode(value, {stream:true}))
+  }
 }
 
 /** POST /upload_pdf/ — upload one or more PDFs for a subject */

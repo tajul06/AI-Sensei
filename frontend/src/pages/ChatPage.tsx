@@ -67,22 +67,33 @@ export default function ChatPage() {
       role: 'user',
       content: text,
     }
-    setMessages(prev => [...prev, userMsg])
+
+    // Setup placeholder for AI message
+    const aiMsgId = `ai-${Date.now()}`
+    const initialAiMsg: Message = {
+      id: aiMsgId,
+      role: 'assistant',
+      content: '', // Will stream into this
+      sources: [], // Sources aren't currently returned by the text stream
+    }
+
+    setMessages(prev => [...prev, userMsg, initialAiMsg])
     setAsking(true)
 
     try {
-      const res = await askQuestion(text, activeSession.subject, activeSession.id)
-      const aiMsg: Message = {
-        id: `ai-${Date.now()}`,
-        role: 'assistant',
-        content: res.result,
-        sources: res.source_documents,
-      }
-      setMessages(prev => [...prev, aiMsg])
+      await askQuestion(text, activeSession.subject, activeSession.id, (chunk) => {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === aiMsgId
+              ? { ...m, content: m.content + chunk }
+              : m
+          )
+        )
+      })
     } catch (err: unknown) {
       addToast('error', err instanceof Error ? err.message : 'Failed to get response')
-      // Remove optimistic user message on failure
-      setMessages(prev => prev.filter(m => m.id !== userMsg.id))
+      // Remove the optimistic messages on failure
+      setMessages(prev => prev.filter(m => m.id !== userMsg.id && m.id !== aiMsgId))
     } finally {
       setAsking(false)
     }

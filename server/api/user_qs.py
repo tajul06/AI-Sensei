@@ -1,7 +1,8 @@
 import time
+import asyncio
 from fastapi import APIRouter, Form ,Depends
 from fastapi import Request,HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse ,StreamingResponse
 from fastapi.concurrency import run_in_threadpool
 from slowapi.util import get_remote_address
 from services.llm import get_llm_chain
@@ -11,7 +12,7 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
-from google.genai.errors import ClientError
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from pinecone import Pinecone
 from pydantic import Field
@@ -105,28 +106,37 @@ async def ask_question(
 
         retriever = SimpleRetriever(documents=docs)
         llm_chain = get_llm_chain(subject, retriever)
-        response = await query_chain(llm_chain, standalone_query)
 
-        save_message(session_id, "user", user_query)
-        save_message(session_id, "assistant", response.get("result"))
-        elapsed = time.perf_counter() - start
-        logger.info(f"Query processed successfully for subject: {subject} (took {elapsed:.2f}s)")
-        return JSONResponse(content={
-            "result": response.get("result"),
-            "source_documents": [
-                {
-                    "page_content": doc.page_content,
-                    "metadata": doc.metadata,
-                }
-                for doc in response.get("source_documents", [])
-            ],  
-        })
+        collected: list[str] = []
+
+        async def generate():
+            try:
+                async for chunk in llm_chain.astream(standalone_query):
+                    collected.append(chunk)
+                    # Gemini chunks can be large; break them into smaller pieces for a smoother, ChatGPT-like visual stream
+                    chunk_size = 3
+                    for i in range(0, len(chunk), chunk_size):
+                        yield chunk[i:i+chunk_size]
+                        await asyncio.sleep(0.01)
+                # Save after stream is fully consumed
+                full_response = "".join(collected)
+                save_message(session_id, "user", user_query)
+                save_message(session_id, "assistant", full_response)
+                elapsed = time.perf_counter() - start
+                logger.info(f"[{elapsed:.2f}s] Stream complete for subject={subject}, user={user_id}: {user_query!r}")
+            except Exception as e:
+                logger.error(f"Error during stream generation: {e}")
+                yield f"\n\nAn error occurred while generating the response: {e}"
+
+        return StreamingResponse(generate(), media_type="text/plain")
 
     
         
-    except ClientError as ce:
+    except ChatGoogleGenerativeAIError as ce:
         if "RESOURCE_EXHAUSTED" in str(ce):
             return JSONResponse(status_code=503, content={"message": "High demand right now. Please try again shortly."})
+        logger.exception(f"Google Generative AI Error: {str(ce)}")
+        return JSONResponse(status_code=500, content={"message": "AI Model Error", "error": str(ce)})
     except ValueError as ve:
         logger.warning(f"Invalid subject provided: {subject}. Error: {str(ve)}")
         return JSONResponse(status_code=400, content={"message": str(ve)})
