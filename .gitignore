@@ -1,0 +1,10 @@
+trial_front/
+
+**/__pycache__/
+*.py[cod]
+
+.venv/
+**/.env
+
+client/node_modules/
+client/dist/
