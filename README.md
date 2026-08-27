@@ -1,73 +1,51 @@
-# AI Sensei
-
-AI Sensei is a study assistant with a React frontend and a FastAPI backend.
-Users authenticate with Supabase, upload subject PDFs, and ask questions against retrieved context from Pinecone.
-
-![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=flat&logo=react&logoColor=white)
-![Backend](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
-![Auth](https://img.shields.io/badge/Auth-Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)
-![VectorDB](https://img.shields.io/badge/VectorDB-Pinecone-0A84FF?style=flat)
-![Deploy](https://img.shields.io/badge/Deploy-Vercel-000000?style=flat&logo=vercel&logoColor=white)
-
-## Scope
-
-This README documents only:
-
-<div align="right">
-
-English
-
-</div>
-
 <h1 align="center">AI Sensei</h1>
 <p align="center">
-	<strong>Study assistant for authenticated PDF-based questions and streamed AI answers.</strong>
-	<br />
-	<em>React · FastAPI · Supabase · Pinecone · Gemini</em>
+  <strong>Study assistant for authenticated PDF-based questions and streamed AI answers.</strong>
+  <br />
+  <em>React · FastAPI · LangChain · Pinecone · Google Gemini · Supabase</em>
 </p>
 
 <p align="center">
-	<a href="#quick-start"><img src="https://img.shields.io/badge/Quick_Start-4CAF50?style=for-the-badge" alt="Quick Start" /></a>
-	<a href="#license"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" /></a>
+  <a href="#quick-start"><img src="https://img.shields.io/badge/Quick_Start-4CAF50?style=for-the-badge" alt="Quick Start" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" /></a>
 </p>
 
 <p align="center">
-	<img src="https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white" alt="TypeScript" />
-	<img src="https://img.shields.io/badge/Python_3.14-3776AB?style=flat&logo=python&logoColor=white" alt="Python" />
-	<img src="https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB" alt="React" />
-	<img src="https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite" />
-	<img src="https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI" />
-	<img src="https://img.shields.io/badge/Supabase-3FCF8E?style=flat&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Python_3.14-3776AB?style=flat&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=flat&logo=langchain&logoColor=white" alt="LangChain" />
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white" alt="Supabase" />
 </p>
+
+---
 
 ## Features
 
 | Feature | Description |
 |---|---|
-| PDF question answering | Upload subject PDFs, embed their content, and ask questions scoped to the authenticated user and subject. |
-| Streaming responses | Answers are streamed from the FastAPI backend to the React chat interface. |
-| Retrieval and reranking | Pinecone retrieves candidate chunks, then Jina reranks the results before generation. |
-| Session history | Users can create sessions and retrieve persisted message history from Supabase. |
-| Supabase authentication | The client supports email/password authentication and Google OAuth through Supabase. |
-| Study-focused rendering | The client renders Markdown, GitHub Flavored Markdown, and mathematical notation with KaTeX. |
+| PDF Question Answering | Upload subject PDFs, chunk content with LangChain, and ask questions scoped to user and subject. |
+| Streaming Responses | Stream answers from the FastAPI backend directly to the React interface using LangChain streaming. |
+| LangChain RAG Pipeline | Orchestrate prompt templates, document formatters, retrievers, and Gemini LLM via LangChain Expression Language (LCEL). |
+| Retrieval and Reranking | Retrieve candidate document chunks from Pinecone and rerank them using Jina AI prior to answer generation. |
+| Session History | Persist and retrieve conversation history per subject session backed by Supabase. |
+| Supabase Authentication | Secure API endpoints with JWT verification supporting email/password and Google OAuth. |
+| Math and Markdown Rendering | Render LaTeX mathematical notation, tables, and formatted study notes with KaTeX and Markdown. |
 
 
-<img width="929" height="937" alt="landing_page" src="https://github.com/user-attachments/assets/888689f6-7f5c-403c-9b13-956048682777" />
-<img width="929" height="949" alt="diabetes_question" src="https://github.com/user-attachments/assets/17c329d8-b187-4669-9f5e-e6406db100dc" />
-
-
+<img width="929" height="937" alt="landing_page" src="https://github.com/user-attachments/assets/54ac2782-1981-4710-bccc-d093312e3b5d" />
+<img width="929" height="949" alt="diabetes_question" src="https://github.com/user-attachments/assets/a9ce1205-1c9f-4dc5-8734-acdb57540324" />
 
 ## Quick Start
 
-The following commands configure both applications for local development.
-
 ### Prerequisites
 
-- Python 3.14, as specified by `.python-version`
-- Node.js and npm
-- Supabase, Pinecone, Google Gemini, Hugging Face, and Jina credentials
+- Python 3.14 (`.python-version`)
+- Node.js 18+ and npm
+- Credentials for Supabase, Pinecone, Google Gemini, Hugging Face, and Jina
 
-### Backend
+### Backend Setup
 
 ```powershell
 python -m venv .venv
@@ -75,7 +53,7 @@ python -m venv .venv
 pip install -r server/requirements.txt
 ```
 
-### Configure
+### Configuration
 
 Create `server/.env`:
 
@@ -89,12 +67,24 @@ SUPABASE_SECRET_KEY=your-supabase-secret-key
 JINA_API_KEY=your-jina-api-key
 ```
 
-Create `client/.env` from `client/.env.example` and set the Supabase and backend values, then start each application in a separate terminal:
+Create `client/.env`:
+
+```dotenv
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+### Run Locally
+
+Start the backend:
 
 ```powershell
 cd server
 uvicorn main:app --reload
 ```
+
+Start the client in a separate terminal:
 
 ```powershell
 cd client
@@ -102,106 +92,82 @@ npm install
 npm run dev
 ```
 
-The API is available at `http://localhost:8000`. Vite serves the client at its reported local development URL, normally `http://localhost:5173`.
-
-## Usage
-
-### Ask a question
-
-The client sends multipart form data and includes the Supabase access token as a bearer token. The response body is consumed as a text stream.
-
-```typescript
-await askQuestion(
-	'What is diabetes?',
-	'Biology',
-	sessionId,
-	(chunk) => {
-		setMessages((previous) =>
-			previous.map((message) =>
-				message.id === aiMsgId
-					? { ...message, content: message.content + chunk }
-					: message,
-			),
-		)
-	},
-)
-```
-
-### Upload PDFs
-
-```typescript
-await uploadPdfs(files, 'Biology')
-```
-
-### Create a session
-
-```typescript
-const { session_id } = await createSession('Biology')
-```
+The API is available at `http://localhost:8000` and the web interface runs at `http://localhost:5173`.
 
 ## Architecture
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'fontSize': '14px'}}}%%
 graph LR
-		A[Client<br/>React + Vite] -->|Supabase session| B[Supabase<br/>Auth + history]
-		A -->|Bearer API requests| C[FastAPI<br/>server/main.py]
-		C --> D[Retrieval and AI services]
-		D --> E[(Pinecone<br/>vector index)]
-		D --> F[Hugging Face<br/>embeddings]
-		D --> G[Jina<br/>reranker]
-		D --> H[Google Gemini<br/>generation]
+    A[Client<br/>React + Vite] -->|Supabase session| B[Supabase<br/>Auth & History]
+    A -->|Bearer API requests| C[FastAPI<br/>Backend API]
+    C --> D[LangChain<br/>RAG Orchestrator]
+    D --> E[(Pinecone<br/>Vector Index)]
+    D --> F[Hugging Face<br/>Embeddings]
+    D --> G[Jina AI<br/>Reranker]
+    D --> H[Google Gemini<br/>LLM Generation]
 
-		classDef client fill:#3B82F6,stroke:#2563EB,color:#fff,stroke-width:2px
-		classDef service fill:#10B981,stroke:#059669,color:#fff,stroke-width:2px
-		classDef data fill:#8B5CF6,stroke:#7C3AED,color:#fff,stroke-width:2px
-		classDef external fill:#F43F5E,stroke:#E11D48,color:#fff,stroke-width:2px
-		classDef auth fill:#F97316,stroke:#EA580C,color:#fff,stroke-width:2px
+    classDef client fill:#3B82F6,stroke:#2563EB,color:#fff,stroke-width:2px
+    classDef service fill:#10B981,stroke:#059669,color:#fff,stroke-width:2px
+    classDef data fill:#8B5CF6,stroke:#7C3AED,color:#fff,stroke-width:2px
+    classDef external fill:#F43F5E,stroke:#E11D48,color:#fff,stroke-width:2px
+    classDef auth fill:#F97316,stroke:#EA580C,color:#fff,stroke-width:2px
 
-		class A client
-		class C,D service
-		class B auth
-		class E data
-		class F,G,H external
+    class A client
+    class C,D service
+    class B auth
+    class E data
+    class F,G,H external
 ```
 
-## Configuration
+## API Reference
 
-### Backend: `server/.env`
-
-| Variable | Description | Default |
-|---|---|---|
-| `PINECONE_API_KEY` | Pinecone API credential. | Required |
-| `PINECONE_INDEX_NAME` | Pinecone index used for document vectors. | Required |
-| `GOOGLE_API_KEY` | Google Gemini API credential. | Required |
-| `HF_TOKEN` | Hugging Face token used for embeddings. | Required |
-| `SUPABASE_URL` | Supabase project URL. | Required |
-| `SUPABASE_SECRET_KEY` | Server-side Supabase credential. | Required |
-| `JINA_API_KEY` | Jina reranking API credential. | Required |
-
-### Client: `client/.env`
-
-| Variable | Description | Default |
-|---|---|---|
-| `VITE_SUPABASE_URL` | Supabase project URL exposed to the Vite client. | Required |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key exposed to the Vite client. | Required |
-| `VITE_API_BASE_URL` | FastAPI base URL. | `http://localhost:8000` |
-
-## API
-
-All application routes except `GET /health` require `Authorization: Bearer <supabase_access_token>`.
+All application endpoints except `GET /health` require `Authorization: Bearer <supabase_access_token>`.
 
 | Method | Path | Description | Auth |
 |---|---|---|---|
-| GET, HEAD | `/health` | Return API health status. | No |
-| POST | `/upload_pdf/` | Validate a subject, process uploaded PDFs, and store their vectors. | Bearer |
-| POST | `/ask/` | Condense, retrieve, rerank, and stream an answer for a session. | Bearer |
-| GET | `/uploaded_files/` | List uploaded files for a subject. | Bearer |
-| POST | `/chat_sessions/` | Create a chat session for a subject. | Bearer |
-| GET | `/chat_sessions/` | List the authenticated user’s chat sessions. | Bearer |
-| GET | `/chat_sessions/{session_id}/history` | Return message history for a session. | Bearer |
+| `GET`, `HEAD` | `/health` | API health check. | Public |
+| `POST` | `/upload_pdf/` | Upload, chunk, and index subject PDFs. | Bearer |
+| `POST` | `/ask/` | Condense question, retrieve, rerank, and stream answer. | Bearer |
+| `GET` | `/uploaded_files/` | List uploaded files for a subject. | Bearer |
+| `POST` | `/chat_sessions/` | Create a new subject session. | Bearer |
+| `GET` | `/chat_sessions/` | List all user chat sessions. | Bearer |
+| `GET` | `/chat_sessions/{session_id}/history` | Fetch message history for a session. | Bearer |
 
-Supported subjects include Physics, Chemistry, Biology, Math, Bangla, English, History, Geography, Philosophy, Literature, Social Science, and Religion.
+Supported subjects: `Physics`, `Chemistry`, `Biology`, `Math`, `Bangla`, `English`, `History`, `Geography`, `Philosophy`, `Literature`, `Social Science`, and `Religion`.
+
+## Configuration Reference
+
+### Backend (`server/.env`)
+
+| Variable | Description | Requirement |
+|---|---|---|
+| `PINECONE_API_KEY` | Pinecone API key | Required |
+| `PINECONE_INDEX_NAME` | Pinecone vector index name | Required |
+| `GOOGLE_API_KEY` | Google Gemini API key | Required |
+| `HF_TOKEN` | Hugging Face inference token for embeddings | Required |
+| `SUPABASE_URL` | Supabase project endpoint | Required |
+| `SUPABASE_SECRET_KEY` | Supabase service secret key | Required |
+| `JINA_API_KEY` | Jina AI reranking API key | Required |
+
+### Frontend (`client/.env`)
+
+| Variable | Description | Default |
+|---|---|---|
+| `VITE_SUPABASE_URL` | Supabase project URL | Required |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous public key | Required |
+| `VITE_API_BASE_URL` | FastAPI backend base URL | `http://localhost:8000` |
+
+## Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| Client | React 19, TypeScript, Vite, React Router, Supabase JS |
+| Client Rendering | React Markdown, remark-gfm, remark-math, rehype-katex, KaTeX |
+| Backend | Python 3.14, FastAPI, Uvicorn, Pydantic, SlowAPI |
+| AI & Orchestration | LangChain (Core, Community, Classic, Splitters), Google Gemini, Hugging Face, Jina AI |
+| Vector & Storage | Pinecone (Vector Index), Supabase (PostgreSQL Auth & Chat History) |
+| Document Processing | PyPDFLoader, RecursiveCharacterTextSplitter |
 
 ## Project Structure
 
@@ -228,17 +194,6 @@ Supported subjects include Physics, Chemistry, Biology, Math, Bangla, English, H
 └── README.md                  # Project documentation
 ```
 
-## Tech Stack
-
-| Layer | Technologies |
-|---|---|
-| Client | React 19, TypeScript, Vite, React Router, Supabase JS |
-| Client rendering | React Markdown, remark-gfm, remark-math, rehype-katex, KaTeX |
-| Backend | Python 3.14, FastAPI, Uvicorn, Pydantic, SlowAPI |
-| AI pipeline | LangChain, Google Gemini, Hugging Face embeddings, Jina reranker |
-| Data services | Pinecone vector index and Supabase authentication/history storage |
-| Document processing | Python multipart uploads and pypdf |
-
 ## Development Commands
 
 ```powershell
@@ -248,28 +203,35 @@ npm run build
 npm run preview
 ```
 
-Server test scripts are located in `server/tests/` and can be run individually with Python when their required services and credentials are available.
+Server test scripts are located in `server/tests/` and can be run with Python once environment variables are configured.
 
 ## Deployment
 
-The client includes `client/vercel.json`, which rewrites all routes to `index.html` for SPA navigation. Configure the Vercel project root as `client/`, use `npm run build` as the build command, and set the three `VITE_*` variables from the client configuration table.
+### Frontend (Vercel)
 
-The repository does not include a backend deployment manifest. Deploy the FastAPI application with an external Python service and run it with:
+The client is configured for Vercel deployment with `client/vercel.json`:
+- **Root Directory**: `client`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Environment Variables**: Configure `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_BASE_URL`.
 
-```text
-uvicorn main:app --host 0.0.0.0 --port <PORT>
+### Backend
+
+Deploy the FastAPI application using any container or Python service:
+
+```powershell
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Set `VITE_API_BASE_URL` to the deployed API URL rather than `localhost`.
+Set `VITE_API_BASE_URL` in the frontend to point to the deployed backend URL.
 
 ## Contributing
 
 1. Fork the repository.
-2. Create a feature branch.
-3. Make focused changes and run the relevant client or server checks.
-4. Open a pull request with a concise description of the change.
+2. Create a feature branch (`git checkout -b feature/name`).
+3. Make focused changes and run tests.
+4. Open a pull request with a concise description of the changes.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
