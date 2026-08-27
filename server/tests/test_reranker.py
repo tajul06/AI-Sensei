@@ -5,8 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import httpx
 
-# Adjust this path if your .env lives somewhere else relative to this script
-load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 
 JINA_API_KEY = os.environ.get("JINA_API_KEY")
 JINA_RERANK_URL = "https://api.jina.ai/v1/rerank"
